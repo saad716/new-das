@@ -78,6 +78,7 @@ pre{background:#F3F5FB;padding:12px;border-radius:10px;overflow:auto;font-size:1
 .err{color:#B42318;min-height:20px;margin-bottom:8px;font-size:13px}
 @media(max-width:860px){.app{flex-direction:column}.side{width:auto;height:auto;position:static;flex-direction:row;overflow-x:auto;padding:10px}.brand,.me .row{display:none}.me{margin:0;border:0;padding:0}.main{padding:18px}.c32{grid-template-columns:1fr}.cv{grid-template-columns:1fr;height:auto}.cl{max-height:300px}.th{height:70vh}.ap{display:none}h1{font-size:26px}}
 </style>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div id="auth" hidden></div>
@@ -95,14 +96,30 @@ let S=JSON.parse(localStorage.getItem('cfg')||'{}'),SESS=JSON.parse(localStorage
 const NAV=[['dash','Dashboard','dash'],['conv','Live Conversations','chat'],['leads','Leads','leads'],['tours','Tours','map'],['analytics','Analytics','chart'],['settings','Settings','set']];
 const HRE=/human|real person|live agent|hand ?off|(speak|talk) to (a |an )?(someone|person|agent)/i;
 const TH={Price:/price|cost|how much|discount|cheap|£|\$/i,Pickup:/pick.?up|meeting point|depart|board/i,Availability:/availab|dates?\b|seats?|book/i,Cancellation:/cancel|refund/i,Payment:/pay|deposit|card|invoice/i,Luggage:/luggage|bag|suitcase/i,Groups:/group|people|party/i,Children:/child|kid|infant|baby/i,Accessibility:/wheelchair|access|disab/i};
+/* ---------- supabase ---------- */
+const SB_URL='',SB_KEY='';
+let SBC=null,RT=null,dt;
+const sbCfg=()=>({u:(S.sbUrl||SB_URL).trim(),k:(S.sbKey||SB_KEY).trim()});
+const useSB=()=>{const c=sbCfg();return !!(c.u&&c.k)};
+function sbc(){const c=sbCfg();if(!SBC)SBC=supabase.createClient(c.u,c.k);return SBC}
+async function pages(q){let out=[],i=0;for(;;){const{data,error}=await q().range(i,i+999);if(error)throw error;out=out.concat(data);if(data.length<1000||out.length>=10000)break;i+=1000}return out}
+async function sbLoad(){const c=sbc();
+ const[m,v]=await Promise.all([pages(()=>c.from('messages').select('session_id,role,content,created_at').order('created_at',{ascending:false})),pages(()=>c.from('conversations').select('*').order('created_at',{ascending:false}))]);
+ const conv=m.map(x=>({timestamp:x.created_at,session_id:x.session_id,role:x.role,message:x.content})),fq={};
+ [...conv].reverse().forEach(x=>{if(x.role==='user'&&!fq[x.session_id])fq[x.session_id]=x.message});
+ const leads=v.map(x=>({session_id:x.session_id,visitor_name:x.visitor_name||'',visitor_number:x.visitor_number||'',visitor_email:x.visitor_email||'',first_question:fq[x.session_id]||''}));
+ return{conv,leads}}
+const debLoad=()=>{clearTimeout(dt);dt=setTimeout(load,400)};
+function live(){if(!useSB()||RT)return;RT=sbc().channel('live');['messages','conversations'].forEach(t=>RT.on('postgres_changes',{event:'*',schema:'public',table:t},debLoad));RT.subscribe()}
 
+ 
 /* ---------- auth ---------- */
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('bty:'+t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 function authUI(mode){const a=$('auth');a.hidden=false;$('app').hidden=true;clearInterval(timer);
  const f=h('form','');const err=h('div','err');err.setAttribute('role','alert');
  const fld=(l,t,n,ac)=>{const i=h('input');i.type=t;i.name=n;i.autocomplete=ac;i.required=true;return[h('label','f',h('span','',l),i),i]};
  const [ln,iN]=fld('Full name','text','name','name'),[le,iE]=fld('Email','email','email','email'),[lp,iP]=fld('Password (8+ characters)','password','pw',mode==='up'?'new-password':'current-password');
- const tabs=h('div','tabs',...[['in','Log in'],['up','Sign up']].map(([k,l])=>{const b=h('button','btn'+(k===mode?' on':''),l);b.type='button';b.onclick=()=>authUI(k);return b}));
+ const tabs=h('div','tabs',...[['in','Log in'],['up','Sign up']].filter(([k])=>k==='in'||!useSB()).map(([k,l])=>{const b=h('button','btn'+(k===mode?' on':''),l);b.type='button';b.onclick=()=>authUI(k);return b}));
  const go=h('button','btn pri',mode==='up'?'Create account':'Log in');go.style.width='100%';
  const adv=h('details','');adv.style.marginTop='16px';const ah=h('input');ah.placeholder='https://your-n8n/webhook/dashboard_auth (optional)';ah.value=S.authHook||'';ah.style.cssText='width:100%;padding:10px;border:1px solid #CBD2E6;border-radius:10px;margin-top:8px';
  adv.append(h('summary','lbl','Advanced: login webhook'),ah);
@@ -114,15 +131,15 @@ function authUI(mode){const a=$('auth');a.hidden=false;$('app').hidden=true;clea
   if(mode==='up'&&!name)return err.textContent='Enter your name.';
   go.disabled=true;
   try{let nm;
-   if(S.authHook){const r=await fetch(S.authHook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:mode==='up'?'signup':'login',name,email,password:pw})});const d=await r.json();if(!d.ok)throw new Error(d.error||'Could not sign in');nm=d.name||name||email}
+   if(useSB()){if(mode==='up')throw new Error('Sign-ups are closed. Ask the admin to add you.');const{data,error}=await sbc().auth.signInWithPassword({email,password:pw});if(error)throw error;const u=data.user;nm=(u.user_metadata&&u.user_metadata.name)||email.split('@')[0]}
+   else if(S.authHook){const r=await fetch(S.authHook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:mode==='up'?'signup':'login',name,email,password:pw})});const d=await r.json();if(!d.ok)throw new Error(d.error||'Could not sign in');nm=d.name||name||email}
    else{const U=JSON.parse(localStorage.getItem('users')||'{}'),hs=await sha(pw);
     if(mode==='up'){if(U[email])throw new Error('An account with this email already exists.');U[email]={name,hs};localStorage.setItem('users',JSON.stringify(U));nm=name}
     else{if(!U[email]||U[email].hs!==hs)throw new Error('Wrong email or password.');nm=U[email].name}}
    SESS={email,name:nm};localStorage.setItem('sess',JSON.stringify(SESS));start()}
   catch(x){err.textContent=x.message}finally{go.disabled=false}};
  a.replaceChildren(h('div','ap',h('div','logo','AI'),h('h2','','Every chat. Every lead. One dashboard.'),h('p','','See what your AI receptionist is saying, jump in when a visitor asks for a human, and track every lead.')),h('div','af',f));iE.focus()}
-function signOut(){localStorage.removeItem('sess');SESS=null;authUI('in')}
-
+function signOut(){if(useSB()){if(RT){sbc().removeChannel(RT);RT=null}sbc().auth.signOut()}localStorage.removeItem('sess');SESS=null;authUI('in')}
 /* ---------- data ---------- */
 function sample(){const n=Date.now(),Q=['How much is the Lake District trip for 12 people?','Where is the pickup point for Edinburgh?','What is your cancellation policy?','Do you take wheelchair users?','Is a group discount available?','Are there seats free on 14 June?','Can I pay a deposit?','How much luggage can we bring?'],conv=[],leads=[];
  const m=(t,s,r,x)=>({timestamp:new Date(t).toISOString(),session_id:s,role:r,message:x});
@@ -131,9 +148,14 @@ function sample(){const n=Date.now(),Q=['How much is the Lake District trip for 
   if(i%3===0)leads.push({first_question:Q[i%8],session_id:id,visitor_name:'Sample Visitor '+(i+1),visitor_number:'+00 000 000 '+String(i).padStart(3,'0'),visitor_email:'visitor'+i+'@example.com'})}
  return{conv,leads,tours:[]}}
 async function sheet(tab){const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(S.id)+'/values/'+encodeURIComponent(tab)+'?key='+encodeURIComponent(S.key));const j=await r.json();if(j.error)throw new Error(j.error.message);const v=j.values||[],hd=(v[0]||[]).map(x=>String(x).trim().toLowerCase());return v.slice(1).map(row=>Object.fromEntries(hd.map((k,i)=>[k,row[i]||''])))}
-async function load(){demo=!S.id||!S.key;let warn='';
- try{if(demo)D=sample();else{const[c,l,t]=await Promise.all([sheet(S.convTab||'conversations').catch(e=>{warn=' · full chats not logged yet';return[]}),sheet(S.leadTab||'leads'),sheet(S.toursTab||'Tours').catch(e=>{warn+=' · Tours tab not readable';return[]})]);D={conv:c,leads:l,tours:t}}
-  build();$('chip').textContent=demo?'Demo workspace (sample data)':'Live data'+warn;(REF[view]||render)();nav()}
+async function load(){const sbOn=useSB(),shOn=!!(S.id&&S.key);demo=!sbOn&&!shOn;let warn='';
+ try{if(demo)D=sample();
+  else{let conv,leads,tours=[];
+   if(sbOn){({conv,leads}=await sbLoad())}
+   else{[conv,leads]=await Promise.all([sheet(S.convTab||'conversations').catch(e=>{warn=' · full chats not logged yet';return[]}),sheet(S.leadTab||'leads')])}
+   if(shOn)tours=await sheet(S.toursTab||'Tours').catch(e=>{warn+=' · Tours tab not readable';return[]});
+   D={conv,leads,tours}}
+  build();$('chip').textContent=demo?'Demo workspace (sample data)':(sbOn?'Live data · Supabase':'Live data')+warn;(REF[view]||render)();nav()}
  catch(e){$('chip').textContent='Could not load: '+e.message}}
 const sidT=id=>{const n=Number(String(id).split('_').pop());return n>1e12?new Date(n):null};
 const cleanPh=v=>{v=String(v||'').trim().replace(/\.0+$/,'');return /^7\d{9}$/.test(v)?'0'+v:v};
@@ -230,15 +252,15 @@ function tours(){const i=h('input','sr');i.placeholder='Search tours';i.setAttri
  const bar=h('div','bar',i);if(S.id){const a=h('a','btn','Edit in Google Sheets');a.href='https://docs.google.com/spreadsheets/d/'+encodeURIComponent(S.id)+'/edit';a.target='_blank';a.rel='noopener noreferrer';bar.append(a)}
  const g=h('div','leads');g.id='tg';setTimeout(refreshTours);return h('div','',h('div','hero',h('h1','','Tours'),h('div','lbl',D.tours.filter(r=>r['tour name']).length+' tours your AI agent can recommend (read only)')),bar,g)}
 
-function settings(){const F=[['id','Google Sheet ID','Long code in the sheet link, between /d/ and /edit'],['key','Google API key','Starts with AIza'],['leadTab','Leads tab name','leads'],['toursTab','Tours tab name','Tours'],['convTab','Conversations tab name','conversations'],['hook','n8n reply webhook URL','https://your-n8n/webhook/dashboard_reply'],['authHook','n8n login webhook URL (optional)','https://your-n8n/webhook/dashboard_auth'],['agent','Team name shown to visitors','Optional'],['every','Refresh every (seconds)','15']],inp={};
+function settings(){const F=[['id','Google Sheet ID','Long code in the sheet link, between /d/ and /edit'],['sbUrl','Supabase project URL','https://xxxx.supabase.co'],['sbKey','Supabase anon key (never service_role)','eyJ... or sb_publishable_...'],['key','Google API key','Starts with AIza'],['leadTab','Leads tab name','leads'],['toursTab','Tours tab name','Tours'],['convTab','Conversations tab name','conversations'],['hook','n8n reply webhook URL','https://your-n8n/webhook/dashboard_reply'],['authHook','n8n login webhook URL (optional)','https://your-n8n/webhook/dashboard_auth'],['agent','Team name shown to visitors','Optional'],['every','Refresh every (seconds)','15']],inp={};
  const f=h('div','card',h('h2','','Connections'),...F.map(([k,l,p])=>{const i=h('input');i.value=S[k]||(k==='id'?'1k7Djbw6LuiNC5W_NtmUBmUdavRURWQ-tN0ROUvqCaIw':'');i.placeholder=p;inp[k]=i;return h('label','f',h('span','',l),i)}));
- const sb=h('button','btn pri','Save and load');sb.onclick=()=>{F.forEach(([k])=>S[k]=inp[k].value.trim());localStorage.setItem('cfg',JSON.stringify(S));clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000);load();toast('Saved')};f.append(sb);
+ const sb=h('button','btn pri','Save and load');sb.onclick=()=>{const was=useSB();F.forEach(([k])=>S[k]=inp[k].value.trim());localStorage.setItem('cfg',JSON.stringify(S));if(was||useSB()){location.reload();return}clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000);load();toast('Saved')};f.append(sb);
  const help=h('div','card',h('h2','','Sheet and n8n format'),h('p','lbl','Optional tab conversations (full chat transcripts), row 1:'),h('pre','','timestamp  session_id  role  message'),h('p','lbl','role: user, bot, human or handoff. Add a handoff row when a visitor clicks your Human handoff button. A visitor typing "human" or "speak to someone" also counts.'),h('p','lbl','Tab leads, row 1:'),h('pre','','first_question  session_id  visitor_name  visitor_number  visitor_email'),h('p','lbl','Reply webhook gets POST JSON:'),h('pre','','{"sessionId":"...","message":"...","agent":"...","timestamp":"..."}'),h('p','lbl','Login webhook gets POST JSON and must answer {"ok":true,"name":"..."} or {"ok":false,"error":"..."}:'),h('pre','','{"action":"login|signup","name":"...","email":"...","password":"..."}'));
  return h('div','',h('div','hero',h('h1','','Settings')),h('div','grid c2',f,help))}
 const VIEWS={dash,conv,leads,tours,analytics,settings},REF={tours:refreshTours,leads:refreshLeads,conv:refreshConv,settings:()=>{}};
 
-function start(){$('auth').hidden=true;$('app').hidden=false;render();load();clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000)}
-SESS?start():authUI('in');
+function start(){$('auth').hidden=true;$('app').hidden=false;render();load();live();clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000)}
+(async()=>{if(useSB()){const{data}=await sbc().auth.getSession(),u=data.session&&data.session.user;  if(u){SESS={email:u.email,name:(u.user_metadata&&u.user_metadata.name)||u.email.split('@')[0]};localStorage.setItem('sess',JSON.stringify(SESS));start()}else authUI('in')}  else SESS?start():authUI('in')})();
 </script>
 </body>
 </html>
