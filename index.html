@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Chatbot Dashboard</title>
+<style>
+:root{--ink:#0F1A3D;--mut:#5B6585;--bg:#F5F6FB;--line:#E6E9F2;--b:#3B5BFF;--v:#6D5BFF;--amb:#8A4B08}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit;color:var(--ink)}
+.lbl{color:var(--mut);font-size:13px}
+.btn{border:1px solid #CBD2E6;background:#fff;border-radius:12px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:600}
+.btn.on,.btn.pri{background:var(--b);border-color:var(--b);color:#fff}
+.app{display:flex;min-height:100vh}
+.side{width:260px;background:linear-gradient(180deg,#0E1A47,#080F2B);padding:22px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:12px;align-items:center;color:#fff;padding:0 6px 22px}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4F6BFF,#7C5CFF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.brand b{display:block;font-size:17px}.brand small{color:#A9B4E0}
+.nv{display:flex;align-items:center;gap:12px;background:none;border:1px solid transparent;color:#C7D0F3;text-align:left;padding:12px 14px;border-radius:12px;font-weight:500;font-size:15px;cursor:pointer;min-height:48px;width:100%}
+.nv:hover{background:rgba(255,255,255,.07)}.nv.on{background:#1B2A80;border-color:#3345B3;color:#fff}
+.badge{margin-left:auto;background:#5B5BFF;color:#fff;border-radius:99px;font-size:12px;font-weight:700;padding:1px 9px}
+.me{margin-top:auto;border-top:1px solid #1E2A63;padding-top:14px;color:#fff}
+.me .row{display:flex;gap:10px;align-items:center;margin-bottom:8px}.me small{color:#A9B4E0;display:block;overflow-wrap:anywhere}
+.av{width:40px;height:40px;border-radius:50%;background:#DDE3FF;color:#2B3BA8;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.main{flex:1;min-width:0;padding:22px 36px 48px}
+.chip{display:inline-block;background:#E8EDFF;color:#2B3BA8;border-radius:10px;padding:6px 12px;font-weight:600;font-size:13px;margin-bottom:22px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+h1{margin:0;font-size:34px;letter-spacing:-.5px}
+.grid{display:grid;gap:18px;margin-bottom:18px}
+.k4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.c2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}.c32{grid-template-columns:2fr 1fr}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 2px 10px rgba(20,30,80,.04)}
+.card h2{margin:0 0 14px;font-size:18px}
+.kt{display:flex;justify-content:space-between;align-items:flex-start}
+.ki{width:42px;height:42px;border-radius:12px;background:#EDF0FF;color:var(--b);display:flex;align-items:center;justify-content:center}
+.big{font-size:38px;font-weight:700;letter-spacing:-1px;margin:6px 0}
+.sub{color:var(--b);font-size:13px;font-weight:600}
+.row{display:flex;justify-content:space-between;gap:10px;margin:12px 0 6px}
+.track{height:10px;border-radius:5px;background:#EDEFF6}.fill{height:10px;border-radius:5px;background:linear-gradient(90deg,#3B5BFF,#7C5CFF)}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#EDEFF6;color:#3A4468}
+.tag.a{background:#FDEBC8;color:var(--amb)}.tag.g{background:#DDF3EE;color:#0A5C51}.tag.b{background:#E8EDFF;color:#2B3BA8}
+.empty{color:var(--mut);padding:10px 0}
+.wk{display:flex;gap:8px;align-items:flex-end;height:170px}
+.wk>div{flex:1;text-align:center;font-size:12px;color:var(--mut);display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px}
+.wb{flex:1;background:#EDEFF6;border-radius:10px;display:flex;align-items:flex-end;overflow:hidden}.wf{width:100%;background:linear-gradient(180deg,#5B6BFF,#7C5CFF)}
+.ci{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #EEF0F7;padding:12px 14px;cursor:pointer}
+.ci:hover,.ci.on{background:#F3F5FF}.ci>div{min-width:0;flex:1}.ci small{display:block;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leads{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.lc{text-align:left;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 10px rgba(20,30,80,.04)}
+.lc:hover{border-color:var(--b)}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}.tc{cursor:default}.tc img{width:100%;height:150px;object-fit:cover;border-radius:12px;background:#EDEFF6}.tc details{font-size:13px;white-space:pre-wrap}
+.sr{width:100%;max-width:340px;padding:11px 14px;border:1px solid #CBD2E6;border-radius:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;justify-content:space-between}
+.cv{display:grid;grid-template-columns:340px 1fr;gap:18px;height:calc(100vh - 160px);min-height:500px}
+.cl,.th{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.lst{overflow:auto;flex:1}.chips{display:flex;gap:6px;padding:12px;border-bottom:1px solid #EEF0F7;flex-wrap:wrap}
+.chips .btn{min-height:36px;padding:5px 12px;font-size:13px}
+.hd{padding:14px 18px;border-bottom:1px solid var(--line)}
+.msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px;background:#F8F9FD}
+.m{max-width:75%;padding:10px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);align-self:flex-start;white-space:pre-wrap;overflow-wrap:anywhere}
+.m.bot{background:#EDF0FF;border-color:#D5DBFF}.m.human{background:var(--b);border-color:var(--b);color:#fff;align-self:flex-end}
+.m small{display:block;opacity:.75;font-size:11px;margin-bottom:2px}
+.sys{align-self:center;font-size:12px;color:var(--amb);background:#FDEBC8;border-radius:99px;padding:3px 12px}
+.comp{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.comp textarea{flex:1;resize:none;padding:11px;border:1px solid #CBD2E6;border-radius:12px;height:48px}
+table{width:100%;border-collapse:collapse}td{padding:10px 8px;border-top:1px solid #EEF0F7;font-size:13px}
+.cols{display:flex;gap:4px;align-items:flex-end;height:130px}.cols div{flex:1;background:linear-gradient(180deg,#5B6BFF,#7C5CFF);border-radius:4px 4px 0 0;min-height:2px}
+.cl2{display:flex;justify-content:space-between;color:var(--mut);font-size:11px;margin-top:6px}
+.f{display:block;margin:0 0 14px}.f span{display:block;font-weight:600;margin-bottom:4px}.f input{width:100%;padding:12px;border:1px solid #CBD2E6;border-radius:12px}
+pre{background:#F3F5FB;padding:12px;border-radius:10px;overflow:auto;font-size:12px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0E1A47;color:#fff;padding:10px 18px;border-radius:10px;display:none;z-index:9}
+#auth{display:flex;min-height:100vh}
+.ap{flex:1;background:linear-gradient(160deg,#0E1A47,#1B2A80);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.ap h2{font-size:36px;margin:0;letter-spacing:-1px}.ap p{color:#C7D0F3;margin:0;max-width:420px}
+.af{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.af form{width:100%;max-width:400px}.tabs{display:flex;gap:6px;margin-bottom:20px}.tabs .btn{flex:1}
+.err{color:#B42318;min-height:20px;margin-bottom:8px;font-size:13px}
+@media(max-width:860px){.app{flex-direction:column}.side{width:auto;height:auto;position:static;flex-direction:row;overflow-x:auto;padding:10px}.brand,.me .row{display:none}.me{margin:0;border:0;padding:0}.main{padding:18px}.c32{grid-template-columns:1fr}.cv{grid-template-columns:1fr;height:auto}.cl{max-height:300px}.th{height:70vh}.ap{display:none}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div id="auth" hidden></div>
+<div class="app" id="app" hidden><nav class="side" id="nav" aria-label="Main"></nav><main class="main"><div class="chip" id="chip"></div><div id="v"></div></main></div>
+<div id="toast" role="status"></div>
+<script>
+const $=i=>document.getElementById(i);
+const h=(t,c,...k)=>{const e=document.createElement(t);if(c)e.className=c;k.flat().forEach(x=>e.append(x instanceof Node?x:document.createTextNode(x??'')));return e};
+const sv=(t,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const fmt=t=>new Date(t).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const IC={dash:'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',chat:'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',leads:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',chart:'M18 20V10M12 20V4M6 20v-6',set:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',out:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',map:'M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v16M16 6v16',time:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2'};
+const ic=k=>{const s=sv('svg',{viewBox:'0 0 24 24',width:20,height:20,fill:'none',stroke:'currentColor','stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'});s.append(sv('path',{d:IC[k]}));return s};
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3500)}
+let S=JSON.parse(localStorage.getItem('cfg')||'{}'),SESS=JSON.parse(localStorage.getItem('sess')||'null'),D={conv:[],leads:[],tours:[]},SES=[],LEADS=[],lf='all',tq='',view='dash',sel=null,filt='all',days=30,q='',timer,demo=true;
+const NAV=[['dash','Dashboard','dash'],['conv','Live Conversations','chat'],['leads','Leads','leads'],['tours','Tours','map'],['analytics','Analytics','chart'],['settings','Settings','set']];
+const HRE=/human|real person|live agent|hand ?off|(speak|talk) to (a |an )?(someone|person|agent)/i;
+const TH={Price:/price|cost|how much|discount|cheap|£|\$/i,Pickup:/pick.?up|meeting point|depart|board/i,Availability:/availab|dates?\b|seats?|book/i,Cancellation:/cancel|refund/i,Payment:/pay|deposit|card|invoice/i,Luggage:/luggage|bag|suitcase/i,Groups:/group|people|party/i,Children:/child|kid|infant|baby/i,Accessibility:/wheelchair|access|disab/i};
+
+/* ---------- auth ---------- */
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('bty:'+t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+function authUI(mode){const a=$('auth');a.hidden=false;$('app').hidden=true;clearInterval(timer);
+ const f=h('form','');const err=h('div','err');err.setAttribute('role','alert');
+ const fld=(l,t,n,ac)=>{const i=h('input');i.type=t;i.name=n;i.autocomplete=ac;i.required=true;return[h('label','f',h('span','',l),i),i]};
+ const [ln,iN]=fld('Full name','text','name','name'),[le,iE]=fld('Email','email','email','email'),[lp,iP]=fld('Password (8+ characters)','password','pw',mode==='up'?'new-password':'current-password');
+ const tabs=h('div','tabs',...[['in','Log in'],['up','Sign up']].map(([k,l])=>{const b=h('button','btn'+(k===mode?' on':''),l);b.type='button';b.onclick=()=>authUI(k);return b}));
+ const go=h('button','btn pri',mode==='up'?'Create account':'Log in');go.style.width='100%';
+ const adv=h('details','');adv.style.marginTop='16px';const ah=h('input');ah.placeholder='https://your-n8n/webhook/dashboard_auth (optional)';ah.value=S.authHook||'';ah.style.cssText='width:100%;padding:10px;border:1px solid #CBD2E6;border-radius:10px;margin-top:8px';
+ adv.append(h('summary','lbl','Advanced: login webhook'),ah);
+ f.append(h('h2','','Welcome'),tabs,...(mode==='up'?[ln]:[]),le,lp,err,go,adv);
+ f.onsubmit=async e=>{e.preventDefault();err.textContent='';S.authHook=ah.value.trim();localStorage.setItem('cfg',JSON.stringify(S));
+  const email=iE.value.trim().toLowerCase(),pw=iP.value,name=iN.value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email))return err.textContent='Enter a valid email.';
+  if(pw.length<8)return err.textContent='Password needs 8 or more characters.';
+  if(mode==='up'&&!name)return err.textContent='Enter your name.';
+  go.disabled=true;
+  try{let nm;
+   if(S.authHook){const r=await fetch(S.authHook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:mode==='up'?'signup':'login',name,email,password:pw})});const d=await r.json();if(!d.ok)throw new Error(d.error||'Could not sign in');nm=d.name||name||email}
+   else{const U=JSON.parse(localStorage.getItem('users')||'{}'),hs=await sha(pw);
+    if(mode==='up'){if(U[email])throw new Error('An account with this email already exists.');U[email]={name,hs};localStorage.setItem('users',JSON.stringify(U));nm=name}
+    else{if(!U[email]||U[email].hs!==hs)throw new Error('Wrong email or password.');nm=U[email].name}}
+   SESS={email,name:nm};localStorage.setItem('sess',JSON.stringify(SESS));start()}
+  catch(x){err.textContent=x.message}finally{go.disabled=false}};
+ a.replaceChildren(h('div','ap',h('div','logo','AI'),h('h2','','Every chat. Every lead. One dashboard.'),h('p','','See what your AI receptionist is saying, jump in when a visitor asks for a human, and track every lead.')),h('div','af',f));iE.focus()}
+function signOut(){localStorage.removeItem('sess');SESS=null;authUI('in')}
+
+/* ---------- data ---------- */
+function sample(){const n=Date.now(),Q=['How much is the Lake District trip for 12 people?','Where is the pickup point for Edinburgh?','What is your cancellation policy?','Do you take wheelchair users?','Is a group discount available?','Are there seats free on 14 June?','Can I pay a deposit?','How much luggage can we bring?'],conv=[],leads=[];
+ const m=(t,s,r,x)=>({timestamp:new Date(t).toISOString(),session_id:s,role:r,message:x});
+ for(let i=0;i<48;i++){const id='s'+i,t=n-i*15.2*36e5-(i<2?0:i*1e5);conv.push(m(t,id,'user',Q[i%8]),m(t+(1500+i%3*700),id,'bot','Thanks for asking. Let me check that for you.'));
+  if(i%4===0){conv.push(m(t+60e3,id,'user','Can I speak to a human please?'),m(t+61e3,id,'handoff','Visitor asked for a human'));if(i>=12)conv.push(m(t+300e3,id,'human','Hi, this is the team. Happy to help!'))}
+  if(i%3===0)leads.push({first_question:Q[i%8],session_id:id,visitor_name:'Sample Visitor '+(i+1),visitor_number:'+00 000 000 '+String(i).padStart(3,'0'),visitor_email:'visitor'+i+'@example.com'})}
+ return{conv,leads,tours:[]}}
+async function sheet(tab){const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(S.id)+'/values/'+encodeURIComponent(tab)+'?key='+encodeURIComponent(S.key));const j=await r.json();if(j.error)throw new Error(j.error.message);const v=j.values||[],hd=(v[0]||[]).map(x=>String(x).trim().toLowerCase());return v.slice(1).map(row=>Object.fromEntries(hd.map((k,i)=>[k,row[i]||''])))}
+async function load(){demo=!S.id||!S.key;let warn='';
+ try{if(demo)D=sample();else{const[c,l,t]=await Promise.all([sheet(S.convTab||'conversations').catch(e=>{warn=' · full chats not logged yet';return[]}),sheet(S.leadTab||'leads'),sheet(S.toursTab||'Tours').catch(e=>{warn+=' · Tours tab not readable';return[]})]);D={conv:c,leads:l,tours:t}}
+  build();$('chip').textContent=demo?'Demo workspace (sample data)':'Live data'+warn;(REF[view]||render)();nav()}
+ catch(e){$('chip').textContent='Could not load: '+e.message}}
+const sidT=id=>{const n=Number(String(id).split('_').pop());return n>1e12?new Date(n):null};
+const cleanPh=v=>{v=String(v||'').trim().replace(/\.0+$/,'');return /^7\d{9}$/.test(v)?'0'+v:v};
+function build(){const by={},L={};D.leads.forEach(l=>{if(l.session_id)L[l.session_id]=l});
+ D.conv.forEach(r=>{if(r.session_id&&r.timestamp)(by[r.session_id]=by[r.session_id]||[]).push(r)});
+ D.leads.forEach(l=>{const id=l.session_id,t=sidT(id);if(id&&t&&!by[id])by[id]=[{timestamp:t.toISOString(),session_id:id,role:'user',message:l.first_question||'(no message)',stub:1}]});
+ SES=Object.entries(by).map(([id,msgs])=>{msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));let tr=-1,hu=-1;const rs=[];
+  msgs.forEach((m,i)=>{if(m.role==='handoff'||(m.role==='user'&&HRE.test(m.message)))tr=i;if(m.role==='human')hu=i;const nx=msgs[i+1];if(m.role==='user'&&nx&&nx.role==='bot'){const d=(new Date(nx.timestamp)-new Date(m.timestamp))/1e3;if(d>=0&&d<120)rs.push(d)}});
+  const l=L[id],lead=l&&l.visitor_name&&l.visitor_number&&l.visitor_email?{...l,visitor_number:cleanPh(l.visitor_number)}:null,last=new Date(msgs[msgs.length-1].timestamp);
+  return{id,msgs,first:new Date(msgs[0].timestamp),last,need:tr>-1&&hu<tr&&Date.now()-last<7*864e5,hand:tr>-1,rs,lead,stub:msgs.every(m=>m.stub),name:l&&l.visitor_name?l.visitor_name:'Visitor '+id.slice(-4)}}).sort((a,b)=>b.last-a.last);
+ const M=Object.fromEntries(SES.map(s=>[s.id,s]));
+ LEADS=D.leads.filter(l=>l.session_id&&(l.visitor_email||l.visitor_number)).map(l=>{const s=M[l.session_id];return{id:l.session_id,name:l.visitor_name||'(no name)',lead:{...l,visitor_number:cleanPh(l.visitor_number)},full:!!(l.visitor_name&&l.visitor_number&&l.visitor_email),first:s?s.first:sidT(l.session_id),has:!!s}}).sort((a,b)=>(b.first||0)-(a.first||0))}
+
+/* ---------- shell ---------- */
+function nav(){const me=h('div','me',h('div','row',h('div','av',(SESS.name[0]||'?').toUpperCase()),h('div','',h('b','',SESS.name),h('small','',SESS.email))));
+ const so=h('button','nv');so.append(ic('out'),'Sign out');so.onclick=signOut;me.append(so);
+ $('nav').replaceChildren(h('div','brand',h('div','logo','AI'),h('div','',h('b','','[Operator name]'),h('small','','Chatbot Dashboard'))),...NAV.map(([k,l,i])=>{const b=h('button','nv'+(k===view?' on':''));b.append(ic(i),l);if(k==='conv'){const c=SES.filter(s=>s.need).length;if(c)b.append(h('span','badge',c))}b.onclick=()=>{view=k;render()};return b}),me)}
+function render(){nav();$('v').replaceChildren(VIEWS[view]())}
+const goChat=id=>{sel=id;view='conv';render()};
+function bars(rows){if(!rows.length)return h('div','empty','No data yet');const b=h('div'),mx=Math.max(1,...rows.map(r=>r[1]));rows.forEach(([a,n])=>{const f=h('div','fill');f.style.width=Math.max(3,n/mx*100)+'%';b.append(h('div','row',h('span','',a),h('b','',n)),h('div','track',f))});return b}
+function themes(ss){const c={};ss.forEach(s=>s.msgs.filter(m=>m.role==='user').forEach(m=>{for(const k in TH)if(TH[k].test(m.message))c[k]=(c[k]||0)+1}));return Object.entries(c).sort((a,b)=>b[1]-a[1])}
+const st=(a,b)=>{const ss=SES.filter(s=>s.first>=a&&s.first<b),r=ss.flatMap(s=>s.rs);return{n:ss.length,l:ss.filter(s=>s.lead).length,hd:ss.filter(s=>s.hand).length,rt:r.length?r.reduce((x,y)=>x+y,0)/r.length:null}};
+const pc=(a,b)=>b?Math.round((a-b)/b*1000)/10:null;
+const dl=(a,b,x)=>{const p=pc(a,b);return p===null?'No earlier data':(p>=0?'+':'')+p+'% '+x};
+const tagOf=s=>s.need?h('span','tag a','Needs human'):s.hand?h('span','tag g','Human handled'):h('span','tag b','AI handled');
+const ri=s=>{const lm=[...s.msgs].reverse().find(m=>m.role!=='handoff'),b=h('button','ci',h('div','av',(s.name[0]||'?').toUpperCase()),h('div','',h('b','',s.name),h('small','',lm?lm.message:'')),h('div','',tagOf(s),h('small','',fmt(s.last))));b.onclick=()=>goChat(s.id);return b};
+
+/* ---------- views ---------- */
+function dash(){const now=Date.now(),D30=30*864e5,c=st(now-D30,now+1),p=st(now-2*D30,now-D30),nh=SES.filter(s=>s.need).length;
+ const kc=(t,i,v,s)=>{const ik=h('div','ki');ik.append(ic(i));return h('div','card',h('div','kt',h('span','lbl',t),ik),h('div','big',v),h('div','sub',s))};
+ const ser=[];for(let i=13;i>=0;i--){const d=new Date(now-i*864e5).toDateString();ser.push({d:new Date(now-i*864e5),c:SES.filter(s=>s.first.toDateString()===d).length})}
+ const mx=Math.max(1,...ser.map(x=>x.c)),X=i=>20+i/13*600,Y=v=>190-v/mx*160;
+ const cv=sv('svg',{viewBox:'0 0 640 225',width:'100%',role:'img','aria-label':'Conversation activity, last 14 days'});
+ const df=sv('defs',{}),lg=sv('linearGradient',{id:'ga',x1:0,y1:0,x2:0,y2:1});lg.append(sv('stop',{offset:'0%','stop-color':'#3B5BFF','stop-opacity':.28}),sv('stop',{offset:'100%','stop-color':'#3B5BFF','stop-opacity':0}));df.append(lg);cv.append(df);
+ const pts=ser.map((x,i)=>X(i)+','+Y(x.c)).join(' ');
+ cv.append(sv('polygon',{points:'20,190 '+pts+' 620,190',fill:'url(#ga)'}),sv('polyline',{points:pts,fill:'none',stroke:'#3B5BFF','stroke-width':3,'stroke-linejoin':'round'}));
+ [0,6,13].forEach(i=>{const t=sv('text',{x:X(i),y:214,'font-size':12,fill:'#5B6585','text-anchor':i===0?'start':i===13?'end':'middle'});t.textContent=ser[i].d.toLocaleDateString([],{month:'short',day:'numeric'});cv.append(t)});
+ const wk=h('div','wk');for(let i=5;i>=0;i--){const w=st(now-(i+1)*7*864e5,now-i*7*864e5),v=w.n?Math.round((w.n-w.hd)/w.n*100):null,f=h('div','wf');f.style.height=(v||0)+'%';wk.append(h('div','',v===null?'–':v+'%',h('div','wb',f),'W'+(6-i)))}
+ const hero=h('div','hero',h('div','',h('h1','','Good to see you, '+SESS.name.split(' ')[0]),h('div','lbl',"Here is how your chatbot and team are doing."+(demo?' Figures below are sample data.':''))));
+ const ob=h('button','btn pri','Open inbox');ob.onclick=()=>{view='conv';render()};hero.append(ob);
+ const recent=h('div','');SES.slice(0,5).forEach(s=>recent.append(ri(s)));if(!SES.length)recent.append(h('div','empty','No conversations yet'));
+ const va=h('button','btn','View all');va.onclick=()=>{view='conv';render()};
+ return h('div','',hero,
+  h('div','grid k4',kc('Total conversations','chat',c.n,dl(c.n,p.n,'vs previous 30 days')),kc('Average response time','time',c.rt===null?'–':c.rt.toFixed(1)+' sec',c.rt===null?'Needs full chat logging':p.rt!==null?((c.rt-p.rt>0?'+':'')+(c.rt-p.rt).toFixed(1)+' sec vs last month'):'Last 30 days'),kc('Leads captured','leads',c.l,c.n?Math.round(c.l/c.n*100)+'% of conversations':'No chats yet'),kc('Waiting for a human','chat',nh,c.n?Math.round(c.hd/c.n*100)+'% asked for a human (30 days)':'Nobody waiting')),
+  h('div','grid c32',h('div','card',h('h2','','Conversation activity'),cv),h('div','card',h('h2','','Chatbot performance'),h('div','lbl','Share of chats the AI resolved without a handover, by week.'),h('div','',wk))),
+  h('div','grid c32',h('div','card',h('div','row',h('h2','','Recent conversations'),va),recent),h('div','card',h('h2','','Top topics'),bars(themes(SES.filter(s=>s.first>=now-D30)).slice(0,6)))))}
+
+function refreshConv(){const lst=$('cls');if(!lst)return;const L=SES.filter(s=>filt==='all'||(filt==='need'&&s.need)||(filt==='ai'&&!s.hand));
+ lst.replaceChildren(...(L.length?L.map(s=>{const b=ri(s);if(s.id===sel)b.classList.add('on');b.onclick=()=>{sel=s.id;refreshConv();const t=$('tx');if(t)t.focus()};return b}):[h('div','empty','No conversations')]));
+ const s=SES.find(x=>x.id===sel),box=$('thr');if(!s){box.replaceChildren(h('div','empty','Select a conversation'));$('cmp').style.display='none';return}
+ $('cmp').style.display='flex';const mb=h('div','msgs');
+ s.msgs.forEach(m=>mb.append(m.role==='handoff'?h('div','sys','Visitor asked for a human'):h('div','m '+m.role,h('small','',(m.role==='user'?s.name:m.role==='bot'?'AI agent':'Team')+' · '+fmt(m.timestamp)),m.message)));
+ if(s.stub)mb.append(h('div','sys','Only the first question was saved. Add the chat logging to see full chats.'));box.replaceChildren(h('div','hd',h('b','',s.name+' '),tagOf(s),h('div','lbl',s.lead?s.lead.visitor_number+' · '+s.lead.visitor_email:'No contact details yet')),mb);mb.scrollTop=mb.scrollHeight}
+function conv(){const chips=h('div','chips',...[['all','All'],['need','Needs human'],['ai','AI handled']].map(([k,l])=>{const b=h('button','btn'+(k===filt?' on':''),l);b.onclick=()=>{filt=k;render()};return b}));
+ const lst=h('div','lst');lst.id='cls';const thr=h('div','');thr.id='thr';thr.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
+ const t=h('textarea');t.id='tx';t.placeholder='Reply to the visitor as your team';t.setAttribute('aria-label','Reply');const sb=h('button','btn pri','Send');
+ const send=async()=>{const x=t.value.trim();if(!x||!sel)return;t.value='';const m={timestamp:new Date().toISOString(),session_id:sel,role:'human',message:x};D.conv.push(m);build();refreshConv();nav();
+  if(!S.hook)return toast('Demo only: add your reply webhook in Settings');
+  try{const r=await fetch(S.hook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sel,message:x,agent:S.agent||SESS.name,timestamp:m.timestamp})});if(!r.ok)throw 0}catch(e){toast('Reply could not be sent. Check the webhook.')}};
+ sb.onclick=send;t.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};
+ const cmp=h('div','comp',t,sb);cmp.id='cmp';thr.append(h('div',''));setTimeout(refreshConv);
+ return h('div','cv',h('div','cl',chips,lst),h('div','th',thr,cmp))}
+
+const lq=s=>(s.name+' '+s.lead.visitor_email+' '+s.lead.visitor_number+' '+s.lead.first_question).toLowerCase().includes(q.toLowerCase())&&(lf==='all'||(lf==='full')===s.full);
+function refreshLeads(){const g=$('lg');if(!g)return;const L=LEADS.filter(lq);g.replaceChildren(...(L.length?L.map(s=>{const v=s.lead,miss=[['name',v.visitor_name],['phone',v.visitor_number],['email',v.visitor_email]].filter(x=>!x[1]).map(x=>x[0]);
+  const b=h('button','lc',h('div','av',(s.name[0]||'?').toUpperCase()),h('b','',s.name),h('span','lbl',v.visitor_number||'No phone'),h('span','lbl',v.visitor_email||'No email'),h('span','',v.first_question||''),h('div','',s.full?h('span','tag g','Complete'):h('span','tag a','Missing '+miss.join(', '))),h('span','lbl',s.first?fmt(s.first):''));
+  b.onclick=()=>s.has?goChat(s.id):toast('No chat saved for this lead yet');return b}):[h('div','empty','No leads yet')]))}
+function leads(){const i=h('input','sr');i.placeholder='Search leads';i.setAttribute('aria-label','Search leads');i.value=q;i.oninput=()=>{q=i.value;refreshLeads()};
+ const chips=h('div','chips',...[['all','All'],['full','Complete'],['part','Incomplete']].map(([k,l])=>{const b=h('button','btn'+(k===lf?' on':''),l);b.onclick=()=>{lf=k;render()};return b}));chips.style.border='0';chips.style.padding='0';
+ const b=h('button','btn pri','Download CSV');b.onclick=()=>{const e=v=>{v=String(v||'');if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'};const rows=[['Name','Phone','Email','First question','Time','Status']].concat(LEADS.map(s=>[s.name,s.lead.visitor_number,s.lead.visitor_email,s.lead.first_question,s.first?s.first.toISOString():'',s.full?'Complete':'Incomplete']));const a=h('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(e).join(',')).join('\n')],{type:'text/csv'}));a.download='leads.csv';a.click()};
+ const g=h('div','leads');g.id='lg';setTimeout(refreshLeads);return h('div','',h('div','hero',h('h1','','Leads'),h('div','lbl',LEADS.length+' contacts · '+LEADS.filter(x=>x.full).length+' complete')),h('div','bar',i,chips,b),g)}
+
+function cols(a,lab){const mx=Math.max(1,...a),c=h('div','cols');a.forEach(v=>{const d=h('div');d.style.height=v/mx*100+'%';d.title=v;c.append(d)});return h('div','',c,h('div','cl2',...lab.map(x=>h('span','',x))))}
+function analytics(){const cut=Date.now()-days*864e5,ss=SES.filter(s=>s.first>=cut),H=Array(24).fill(0),W=Array(7).fill(0),c={};
+ ss.forEach(s=>{H[s.first.getHours()]++;W[(s.first.getDay()+6)%7]++;s.msgs.filter(m=>m.role==='user').forEach(m=>{const k=m.message.trim().toLowerCase().replace(/\s+/g,' ');if(k.length>8&&(k.includes('?')||s.msgs[0]===m))c[k]=(c[k]||0)+1})});
+ const top=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,10),tb=h('table');top.forEach(([a,n])=>tb.append(h('tr','',h('td','',a),h('td','',h('b','',n)))));
+ const rs=ss.flatMap(s=>s.rs),hd=ss.filter(s=>s.hand).length;
+ const sel_=h('div','bar',h('h1','','Analytics'),h('div','',...[7,30,90].map(d=>{const b=h('button','btn'+(d===days?' on':''),d+' days');b.onclick=()=>{days=d;render()};b.style.marginLeft='6px';return b})));
+ const kp=(t,v)=>h('div','card',h('span','lbl',t),h('div','big',v));
+ return h('div','',sel_,h('div','grid k4',kp('Conversations',ss.length),kp('Leads',ss.filter(s=>s.lead).length),kp('Asked for a human',hd),kp('Avg response',rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length).toFixed(1)+' sec':'–')),
+  h('div','grid c2',h('div','card',h('h2','','Most asked topics'),bars(themes(ss))),h('div','card',h('h2','','Questions visitors ask'),top.length?tb:h('div','empty','No data yet'))),
+  h('div','grid c2',h('div','card',h('h2','','Conversations by hour'),cols(H,['12am','6am','12pm','6pm','11pm'])),h('div','card',h('h2','','Conversations by weekday'),cols(W,['Mon','Tue','Wed','Thu','Fri','Sat','Sun']))))}
+
+const urlOf=v=>(String(v||'').match(/https?:\/\/[^\s"'<>)]+/)||[])[0]||'';
+const priceOf=r=>{for(const k of ['adult price','child price','price']){const m=String(r[k]||'').match(/£\s?\d+(\.\d+)?/);if(m)return m[0].replace(/\s/g,'')}return''};
+function refreshTours(){const g=$('tg');if(!g)return;const T=D.tours.filter(r=>r['tour name']&&(r['tour name']+' '+(r['tour type']||'')).toLowerCase().includes(tq.toLowerCase()));
+ g.replaceChildren(...(T.length?T.map(r=>{const img=urlOf(r.image),lnk=urlOf(r['booking link']),p=priceOf(r),c=h('div','lc tc');
+  if(img.startsWith('https://')){const im=h('img');im.src=img;im.alt='';im.loading='lazy';im.referrerPolicy='no-referrer';c.append(im)}
+  c.append(h('b','',r['tour name']),h('div','',r['tour type']?h('span','tag b',r['tour type']):'',' ',p?h('span','tag g','From '+p):''));
+  const det=h('details','',h('summary','lbl','Details'));[['Departure points','departure points'],['Inclusions','inclusions'],['Notes','notes']].forEach(([l,k])=>{if(r[k])det.append(h('div','lbl',l),h('div','',r[k]))});c.append(det);
+  if(lnk){const a=h('a','btn pri','Booking link');a.href=lnk;a.target='_blank';a.rel='noopener noreferrer';c.append(a)}
+  return c}):[h('div','empty',demo?'Connect your Google Sheet in Settings to see your tours.':'No tours found. Check the Tours tab name in Settings.')]))}
+function tours(){const i=h('input','sr');i.placeholder='Search tours';i.setAttribute('aria-label','Search tours');i.value=tq;i.oninput=()=>{tq=i.value;refreshTours()};
+ const bar=h('div','bar',i);if(S.id){const a=h('a','btn','Edit in Google Sheets');a.href='https://docs.google.com/spreadsheets/d/'+encodeURIComponent(S.id)+'/edit';a.target='_blank';a.rel='noopener noreferrer';bar.append(a)}
+ const g=h('div','leads');g.id='tg';setTimeout(refreshTours);return h('div','',h('div','hero',h('h1','','Tours'),h('div','lbl',D.tours.filter(r=>r['tour name']).length+' tours your AI agent can recommend (read only)')),bar,g)}
+
+function settings(){const F=[['id','Google Sheet ID','Long code in the sheet link, between /d/ and /edit'],['key','Google API key','Starts with AIza'],['leadTab','Leads tab name','leads'],['toursTab','Tours tab name','Tours'],['convTab','Conversations tab name','conversations'],['hook','n8n reply webhook URL','https://your-n8n/webhook/dashboard_reply'],['authHook','n8n login webhook URL (optional)','https://your-n8n/webhook/dashboard_auth'],['agent','Team name shown to visitors','Optional'],['every','Refresh every (seconds)','15']],inp={};
+ const f=h('div','card',h('h2','','Connections'),...F.map(([k,l,p])=>{const i=h('input');i.value=S[k]||(k==='id'?'1k7Djbw6LuiNC5W_NtmUBmUdavRURWQ-tN0ROUvqCaIw':'');i.placeholder=p;inp[k]=i;return h('label','f',h('span','',l),i)}));
+ const sb=h('button','btn pri','Save and load');sb.onclick=()=>{F.forEach(([k])=>S[k]=inp[k].value.trim());localStorage.setItem('cfg',JSON.stringify(S));clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000);load();toast('Saved')};f.append(sb);
+ const help=h('div','card',h('h2','','Sheet and n8n format'),h('p','lbl','Optional tab conversations (full chat transcripts), row 1:'),h('pre','','timestamp  session_id  role  message'),h('p','lbl','role: user, bot, human or handoff. Add a handoff row when a visitor clicks your Human handoff button. A visitor typing "human" or "speak to someone" also counts.'),h('p','lbl','Tab leads, row 1:'),h('pre','','first_question  session_id  visitor_name  visitor_number  visitor_email'),h('p','lbl','Reply webhook gets POST JSON:'),h('pre','','{"sessionId":"...","message":"...","agent":"...","timestamp":"..."}'),h('p','lbl','Login webhook gets POST JSON and must answer {"ok":true,"name":"..."} or {"ok":false,"error":"..."}:'),h('pre','','{"action":"login|signup","name":"...","email":"...","password":"..."}'));
+ return h('div','',h('div','hero',h('h1','','Settings')),h('div','grid c2',f,help))}
+const VIEWS={dash,conv,leads,tours,analytics,settings},REF={tours:refreshTours,leads:refreshLeads,conv:refreshConv,settings:()=>{}};
+
+function start(){$('auth').hidden=true;$('app').hidden=false;render();load();clearInterval(timer);timer=setInterval(load,Math.max(5,+S.every||15)*1000)}
+SESS?start():authUI('in');
+</script>
+</body>
+</html>
