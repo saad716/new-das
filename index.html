@@ -97,7 +97,7 @@ const NAV=[['dash','Dashboard','dash'],['conv','Live Conversations','chat'],['le
 const HRE=/human|real person|live agent|hand ?off|(speak|talk) to (a |an )?(someone|person|agent)/i;
 const TH={Price:/price|cost|how much|discount|cheap|£|\$/i,Pickup:/pick.?up|meeting point|depart|board/i,Availability:/availab|dates?\b|seats?|book/i,Cancellation:/cancel|refund/i,Payment:/pay|deposit|card|invoice/i,Luggage:/luggage|bag|suitcase/i,Groups:/group|people|party/i,Children:/child|kid|infant|baby/i,Accessibility:/wheelchair|access|disab/i};
 /* ---------- supabase ---------- */
-const SB_URL='',SB_KEY='';
+const SB_URL='https://lotxjvbdlyqazecgbmnr.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvdHhqdmJkbHlxYXplY2dibW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1ODMsImV4cCI6MjEwOTA5NTU4M30._hW-bg77wcCQrn-KU3aCVT7Y1tj-ZBDmZxK8XQvM2iw';
 let SBC=null,RT=null,dt;
 const sbCfg=()=>({u:(S.sbUrl||SB_URL).trim(),k:(S.sbKey||SB_KEY).trim()});
 const useSB=()=>{const c=sbCfg();return !!(c.u&&c.k)};
