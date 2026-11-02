@@ -213,7 +213,8 @@ function conv(){const chips=h('div','chips',...[['all','All'],['need','Needs hum
  const lst=h('div','lst');lst.id='cls';const thr=h('div','');thr.id='thr';thr.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
  const t=h('textarea');t.id='tx';t.placeholder='Reply to the visitor as your team';t.setAttribute('aria-label','Reply');const sb=h('button','btn pri','Send');
  const send=async()=>{const x=t.value.trim();if(!x||!sel)return;t.value='';const m={timestamp:new Date().toISOString(),session_id:sel,role:'human',message:x};D.conv.push(m);build();refreshConv();nav();
-  if(!S.hook)return toast('Demo only: add your reply webhook in Settings');
+  if(useSB()){const sid=sel;try{const c=sbc(),a=await c.from('messages').insert({session_id:sid,role:'human',content:x});if(a.error)throw a.error;const b=await c.from('conversations').update({status:'human',last_message_at:new Date().toISOString()}).eq('session_id',sid);if(b.error)throw b.error}catch(e){toast('Reply failed: '+(e.message||'check Supabase'))}return}
+                      if(!S.hook)return toast('Demo only: add your reply webhook in Settings');
   try{const r=await fetch(S.hook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sel,message:x,agent:S.agent||SESS.name,timestamp:m.timestamp})});if(!r.ok)throw 0}catch(e){toast('Reply could not be sent. Check the webhook.')}};
  sb.onclick=send;t.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};
  const cmp=h('div','comp',t,sb);cmp.id='cmp';thr.append(h('div',''));setTimeout(refreshConv);
