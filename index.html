@@ -107,7 +107,7 @@ async function sbLoad(){const c=sbc();
  const[m,v]=await Promise.all([pages(()=>c.from('messages').select('session_id,role,content,created_at').order('created_at',{ascending:false})),pages(()=>c.from('conversations').select('*').order('created_at',{ascending:false}))]);
  const conv=m.map(x=>({timestamp:x.created_at,session_id:x.session_id,role:x.role,message:x.content})),fq={};
  [...conv].reverse().forEach(x=>{if(x.role==='user'&&!fq[x.session_id])fq[x.session_id]=x.message});
- const leads=v.map(x=>({session_id:x.session_id,visitor_name:x.visitor_name||'',visitor_number:x.visitor_number||'',visitor_email:x.visitor_email||'',first_question:fq[x.session_id]||''}));
+ const leads=v.map(x=>({session_id:x.session_id,visitor_name:x.visitor_name||'',visitor_number:x.visitor_number||'',visitor_email:x.visitor_email||'',status:x.status||'bot',first_question:fq[x.session_id]||''}));
  return{conv,leads}}
 const debLoad=()=>{clearTimeout(dt);dt=setTimeout(load,400)};
 function live(){if(!useSB()||RT)return;RT=sbc().channel('live');['messages','conversations'].forEach(t=>RT.on('postgres_changes',{event:'*',schema:'public',table:t},debLoad));RT.subscribe()}
@@ -165,7 +165,7 @@ function build(){const by={},L={};D.leads.forEach(l=>{if(l.session_id)L[l.sessio
  SES=Object.entries(by).map(([id,msgs])=>{msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));let tr=-1,hu=-1;const rs=[];
   msgs.forEach((m,i)=>{if(m.role==='handoff'||(m.role==='user'&&HRE.test(m.message)))tr=i;if(m.role==='human')hu=i;const nx=msgs[i+1];if(m.role==='user'&&nx&&nx.role==='bot'){const d=(new Date(nx.timestamp)-new Date(m.timestamp))/1e3;if(d>=0&&d<120)rs.push(d)}});
   const l=L[id],lead=l&&l.visitor_name&&l.visitor_number&&l.visitor_email?{...l,visitor_number:cleanPh(l.visitor_number)}:null,last=new Date(msgs[msgs.length-1].timestamp);
-  return{id,msgs,first:new Date(msgs[0].timestamp),last,need:tr>-1&&hu<tr&&Date.now()-last<7*864e5,hand:tr>-1,rs,lead,stub:msgs.every(m=>m.stub),name:l&&l.visitor_name?l.visitor_name:'Visitor '+id.slice(-4)}}).sort((a,b)=>b.last-a.last);
+  return{id,msgs,first:new Date(msgs[0].timestamp),last,need:l&&l.status?(l.status==='human'&&((msgs.filter(m=>m.role!=='handoff').pop()||{}).role==='user')):(tr>-1&&hu<tr&&Date.now()-last<7*864e5),hand:l&&l.status?(l.status==='human'||hu>-1):tr>-1,st:l&&l.status||'',rs,lead,stub:msgs.every(m=>m.stub),name:l&&l.visitor_name?l.visitor_name:'Visitor '+id.slice(-4)}}).sort((a,b)=>b.last-a.last);
  const M=Object.fromEntries(SES.map(s=>[s.id,s]));
  LEADS=D.leads.filter(l=>l.session_id&&(l.visitor_email||l.visitor_number)).map(l=>{const s=M[l.session_id];return{id:l.session_id,name:l.visitor_name||'(no name)',lead:{...l,visitor_number:cleanPh(l.visitor_number)},full:!!(l.visitor_name&&l.visitor_number&&l.visitor_email),first:s?s.first:sidT(l.session_id),has:!!s}}).sort((a,b)=>(b.first||0)-(a.first||0))}
 
@@ -208,7 +208,7 @@ function refreshConv(){const lst=$('cls');if(!lst)return;const L=SES.filter(s=>f
  const s=SES.find(x=>x.id===sel),box=$('thr');if(!s){box.replaceChildren(h('div','empty','Select a conversation'));$('cmp').style.display='none';return}
  $('cmp').style.display='flex';const mb=h('div','msgs');
  s.msgs.forEach(m=>mb.append(m.role==='handoff'?h('div','sys','Visitor asked for a human'):h('div','m '+m.role,h('small','',(m.role==='user'?s.name:m.role==='bot'?'AI agent':'Team')+' · '+fmt(m.timestamp)),m.message)));
- if(s.stub)mb.append(h('div','sys','Only the first question was saved. Add the chat logging to see full chats.'));box.replaceChildren(h('div','hd',h('b','',s.name+' '),tagOf(s),h('div','lbl',s.lead?s.lead.visitor_number+' · '+s.lead.visitor_email:'No contact details yet')),mb);mb.scrollTop=mb.scrollHeight}
+ if(s.stub)mb.append(h('div','sys','Only the first question was saved. Add the chat logging to see full chats.'));const hb=h('button','btn','Hand back to AI');hb.style.cssText='margin-top:8px;min-height:36px;padding:5px 12px;font-size:13px';  hb.onclick=async()=>{const{error}=await sbc().from('conversations').update({status:'bot'}).eq('session_id',s.id);if(error)return toast('Failed: '+error.message);const r=D.leads.find(x=>x.session_id===s.id);if(r)r.status='bot';build();refreshConv();nav();toast('Handed back to AI')};  box.replaceChildren(h('div','hd',h('b','',s.name+' '),tagOf(s),h('div','lbl',s.lead?s.lead.visitor_number+' · '+s.lead.visitor_email:'No contact details yet'),...(useSB()&&s.st==='human'?[hb]:[])),mb);mb.scrollTop=mb.scrollHeight}
 function conv(){const chips=h('div','chips',...[['all','All'],['need','Needs human'],['ai','AI handled']].map(([k,l])=>{const b=h('button','btn'+(k===filt?' on':''),l);b.onclick=()=>{filt=k;render()};return b}));
  const lst=h('div','lst');lst.id='cls';const thr=h('div','');thr.id='thr';thr.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
  const t=h('textarea');t.id='tx';t.placeholder='Reply to the visitor as your team';t.setAttribute('aria-label','Reply');const sb=h('button','btn pri','Send');
