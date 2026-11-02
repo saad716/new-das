@@ -162,10 +162,10 @@ const cleanPh=v=>{v=String(v||'').trim().replace(/\.0+$/,'');return /^7\d{9}$/.t
 function build(){const by={},L={};D.leads.forEach(l=>{if(l.session_id)L[l.session_id]=l});
  D.conv.forEach(r=>{if(r.session_id&&r.timestamp)(by[r.session_id]=by[r.session_id]||[]).push(r)});
  D.leads.forEach(l=>{const id=l.session_id,t=sidT(id);if(id&&t&&!by[id])by[id]=[{timestamp:t.toISOString(),session_id:id,role:'user',message:l.first_question||'(no message)',stub:1}]});
- SES=Object.entries(by).map(([id,msgs])=>{msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));let tr=-1,hu=-1;const rs=[];
-  msgs.forEach((m,i)=>{if(m.role==='handoff'||(m.role==='user'&&HRE.test(m.message)))tr=i;if(m.role==='human')hu=i;const nx=msgs[i+1];if(m.role==='user'&&nx&&nx.role==='bot'){const d=(new Date(nx.timestamp)-new Date(m.timestamp))/1e3;if(d>=0&&d<120)rs.push(d)}});
+ SES=Object.entries(by).map(([id,msgs])=>{msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));let tr=-1,hu=-1,lu=-1;const rs=[];
+  msgs.forEach((m,i)=>{if(m.role==='user')lu=i;if(m.role==='handoff'||(m.role==='user'&&HRE.test(m.message)))tr=i;if(m.role==='human')hu=i;const nx=msgs[i+1];if(m.role==='user'&&nx&&nx.role==='bot'){const d=(new Date(nx.timestamp)-new Date(m.timestamp))/1e3;if(d>=0&&d<120)rs.push(d)}});
   const l=L[id],lead=l&&l.visitor_name&&l.visitor_number&&l.visitor_email?{...l,visitor_number:cleanPh(l.visitor_number)}:null,last=new Date(msgs[msgs.length-1].timestamp);
-  return{id,msgs,first:new Date(msgs[0].timestamp),last,need:l&&l.status?(l.status==='human'&&((msgs.filter(m=>m.role!=='handoff').pop()||{}).role==='user')):(tr>-1&&hu<tr&&Date.now()-last<7*864e5),hand:l&&l.status?(l.status==='human'||hu>-1):tr>-1,st:l&&l.status||'',rs,lead,stub:msgs.every(m=>m.stub),name:l&&l.visitor_name?l.visitor_name:'Visitor '+id.slice(-4)}}).sort((a,b)=>b.last-a.last);
+  return{id,msgs,first:new Date(msgs[0].timestamp),last,need:l&&l.status?(l.status==='human'&&lu>hu&&Date.now()-last<7*864e5):(tr>-1&&hu<tr&&Date.now()-last<7*864e5),hand:l&&l.status?(l.status==='human'||hu>-1):tr>-1,st:l&&l.status||'',rs,lead,stub:msgs.every(m=>m.stub),name:l&&l.visitor_name?l.visitor_name:'Visitor '+id.slice(-4)}}).sort((a,b)=>b.last-a.last);
  const M=Object.fromEntries(SES.map(s=>[s.id,s]));
  LEADS=D.leads.filter(l=>l.session_id&&(l.visitor_email||l.visitor_number)).map(l=>{const s=M[l.session_id];return{id:l.session_id,name:l.visitor_name||'(no name)',lead:{...l,visitor_number:cleanPh(l.visitor_number)},full:!!(l.visitor_name&&l.visitor_number&&l.visitor_email),first:s?s.first:sidT(l.session_id),has:!!s}}).sort((a,b)=>(b.first||0)-(a.first||0))}
 
