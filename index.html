@@ -172,7 +172,7 @@ function build(){const by={},L={};D.leads.forEach(l=>{if(l.session_id)L[l.sessio
 /* ---------- shell ---------- */
 function nav(){const me=h('div','me',h('div','row',h('div','av',(SESS.name[0]||'?').toUpperCase()),h('div','',h('b','',SESS.name),h('small','',SESS.email))));
  const so=h('button','nv');so.append(ic('out'),'Sign out');so.onclick=signOut;me.append(so);
- $('nav').replaceChildren(h('div','brand',h('div','logo','AI'),h('div','',h('b','','[Operator name]'),h('small','','Chatbot Dashboard'))),...NAV.map(([k,l,i])=>{const b=h('button','nv'+(k===view?' on':''));b.append(ic(i),l);if(k==='conv'){const c=SES.filter(s=>s.need).length;if(c)b.append(h('span','badge',c))}b.onclick=()=>{view=k;render()};return b}),me)}
+ $('nav').replaceChildren(h('div','brand',h('div','logo','AI'),h('div','',h('b','','[Sun Rise Tours]'),h('small','','Chatbot Dashboard'))),...NAV.map(([k,l,i])=>{const b=h('button','nv'+(k===view?' on':''));b.append(ic(i),l);if(k==='conv'){const c=SES.filter(s=>s.need).length;if(c)b.append(h('span','badge',c))}b.onclick=()=>{view=k;render()};return b}),me)}
 function render(){nav();$('v').replaceChildren(VIEWS[view]())}
 const goChat=id=>{sel=id;view='conv';render()};
 function bars(rows){if(!rows.length)return h('div','empty','No data yet');const b=h('div'),mx=Math.max(1,...rows.map(r=>r[1]));rows.forEach(([a,n])=>{const f=h('div','fill');f.style.width=Math.max(3,n/mx*100)+'%';b.append(h('div','row',h('span','',a),h('b','',n)),h('div','track',f))});return b}
